@@ -1,0 +1,11 @@
+[allvms]
+85.190.240.82
+
+[proxmox]
+85.190.240.82
+
+[allvms:vars]
+ansible_user=proxmox
+
+[proxmox:vars]
+ansible_user=proxmox

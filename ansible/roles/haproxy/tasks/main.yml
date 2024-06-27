@@ -1,0 +1,57 @@
+---
+# tasks file for haproxy
+- name: Run HAProxy container
+  hosts: proxmox
+  become: no
+  vars:
+    template_folder: ../templates
+  tasks:
+    - name: Create HAProxy configuration directory
+      file:
+        path: /etc/haproxy
+        state: directory
+        mode: '0770'
+        owner: proxmox
+        group: www-data
+    - name: Create HAProxy configuration file
+      template:
+        src: "{{ template_folder }}/haproxy.cfg"  # Replace with your HAProxy configuration template
+        dest: /etc/haproxy/haproxy.cfg
+        mode: '0660'
+        owner: proxmox
+        group: www-data
+      notify:
+        - "restart haproxy service"
+    - name: Ensure HAProxy container is running
+      community.docker.docker_container:
+        name: haproxy
+        image: docker.io/haproxy:alpine3.20
+        state: started
+        user: root
+        detach: true
+        network_mode: host
+        volumes:
+          - "/etc/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+          
+  handlers:
+    - name: Stop a container
+      listen: "restart haproxy service"
+      community.docker.docker_container:
+        name: haproxy
+        state: stopped
+    - name: Remove container
+      listen: "restart haproxy service"
+      community.docker.docker_container:
+        name: haproxy
+        state: absent
+    - name: Restart HAProxy container
+      listen: "restart haproxy service"
+      community.docker.docker_container:
+        name: haproxy
+        image: docker.io/haproxy:alpine3.20
+        state: started
+        user: root
+        detach: true
+        network_mode: host
+        volumes:
+          - "/etc/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
