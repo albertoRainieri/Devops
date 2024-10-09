@@ -1,0 +1,33 @@
+- name: Create Dynamic Volume Provisioner for Openshift Cluster
+  hosts: ocp-workers
+  become: yes
+  vars:
+    vars_files:
+      - vars.yaml
+  
+  tasks:
+    - name:
+      ansible.builtin.include_vars: vars.yaml
+
+    - name: Create mount point for NFS storage
+      file:
+        path: '/mnt/{{ namespace }}'
+        state: directory
+
+    - name: Create /etc/fstab if not exists
+      copy:
+        content: ""
+        dest: /etc/fstab
+        force: false
+        group: root
+        owner: root
+        mode: 0640
+
+    - name: Add NFS storage to /etc/fstab
+      lineinfile:
+        dest: /etc/fstab
+        state: present
+        line: "{{ nfs_server }}:{{ nfs_path }}/{{ namespace }}   /mnt/{{ namespace }} 	nfs   rw,soft,bg,nfsvers=3,_netdev,tcp"
+
+    - name: Create mount point for NFS storage
+      command: mount -av

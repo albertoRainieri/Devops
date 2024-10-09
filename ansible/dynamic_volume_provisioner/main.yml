@@ -1,0 +1,7 @@
+
+
+- name: install os-prerequisites
+  import_playbook: "nfs-prerequisites.yml"
+
+- name: deploy-k8s
+  import_playbook: "deploy-k8s-dvp.yml"

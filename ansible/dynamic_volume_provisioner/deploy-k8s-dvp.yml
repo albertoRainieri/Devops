@@ -1,0 +1,60 @@
+- name: Create Dynamic Volume Provisioner for Openshift Cluster
+  hosts: localhost
+  become: no
+  vars:
+    vars_files:
+      - vars.yaml
+  
+  tasks:
+    - name:
+      ansible.builtin.include_vars: vars.yaml
+
+
+    - name: Deploy Service Account
+      k8s:
+        name: rbac
+        state: present
+        definition: "{{ lookup('template', 'templates/service-account.yml') | from_yaml }}"
+        namespace: "{{ namespace }}"
+
+    - name: Deploy Cluster Role
+      k8s:
+        name: rbac
+        state: present
+        definition: "{{ lookup('template', 'templates/clusterrole.yml') | from_yaml }}"
+        namespace: "{{ namespace }}"
+
+    - name: Deploy Cluster Role Binding
+      k8s:
+        name: rbac
+        state: present
+        definition: "{{ lookup('template', 'templates/clusterrole-binding.yml') | from_yaml }}"
+        namespace: "{{ namespace }}"
+
+    - name: Deploy Role
+      k8s:
+        name: rbac
+        state: present
+        definition: "{{ lookup('template', 'templates/role.yml') | from_yaml }}"
+        namespace: "{{ namespace }}"
+
+    - name: Deploy Role Binding
+      k8s:
+        name: rbac
+        state: present
+        definition: "{{ lookup('template', 'templates/rolebinding.yml') | from_yaml }}"
+        namespace: "{{ namespace }}"
+
+    - name: Deploy Deployment
+      k8s:
+        name: deployment-dv
+        state: present
+        definition: "{{ lookup('template', 'templates/02-deployment.yml') | from_yaml }}"
+        namespace: "{{ namespace }}"
+
+    - name: Deploy Storage
+      k8s:
+        name: storage-dv
+        state: present
+        definition: "{{ lookup('template', 'templates/03-storage.yml') | from_yaml }}"
+        namespace: "{{ namespace }}"

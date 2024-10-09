@@ -1,0 +1,17 @@
+
+- name: Install Prerequisites for oc cli
+  hosts: common
+  become: yes
+  
+  tasks:
+    - name: Install pip
+      ansible.builtin.yum:
+        name: pip
+        state: present
+  
+    - name: Install Prerequisites
+      pip:
+        name:
+          - openshift
+          - pyyaml
+          - kubernetes 

@@ -1,0 +1,10 @@
+## Deploy Dynamic Volume Provisioner
+
+# Prerequisites
+- Already Have a running a NFS Server
+
+# STEP 1: Mount NFS dir on each worker (nfs-prerequisites.yml)
+# STEP 2: Deploy a Deployment for dynamic volume provisioning (deploy-k8s-dvp.yml)
+
+# EXECUTION
+ansible-playbook

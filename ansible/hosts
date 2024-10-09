@@ -1,11 +1,16 @@
-[allvms]
-85.190.240.82
-
 [proxmox]
-85.190.240.82
+proxmox_root
 
-[allvms:vars]
-ansible_user=proxmox
+[common]
+common
 
-[proxmox:vars]
-ansible_user=proxmox
+[ocp-w-1]
+ocp-w-1
+
+[ocp-w-2]
+ocp-w-2
+
+[ocp-workers]
+ocp-w-1
+ocp-w-2
+

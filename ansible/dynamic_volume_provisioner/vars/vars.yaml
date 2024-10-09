@@ -1,0 +1,4 @@
+namespace: devops-test
+nfs_server: "common.devops.lab"
+nfs_path: "/nfs-common"
+root_dir_playbook: /Users/albertorainieri/Learning/Devops/ansible/dynamic_volume_provisioner
