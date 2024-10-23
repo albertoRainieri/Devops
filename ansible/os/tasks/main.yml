@@ -1,0 +1,71 @@
+---
+# tasks file for os
+- name: Create LVM for NFS storage
+
+  vars:
+    physical_volume: "/dev/sdb"
+    mount_point: "/mnt/storageclass"
+
+  tasks:
+    - name: Check if physical volume /dev/sdb exists
+      stat: 'path={{ vars.physical_volume }}'
+      register: pv_exists
+
+    - name: Initialize physical volume /dev/sdb if not exists
+      command: pvcreate /dev/sdb
+      when: not pv_exists.stat.exists
+
+    - name: Check if Volume group exists
+      command: vgdisplay nfs
+      register: vg_exists
+
+    - name: Create a volume group on top of /dev/sdb with physical extent size = 128KiB
+      community.general.lvg:
+        vg: vg.services
+        pvs: '{{ vars.physical_volume }}'
+      when: vg_exists.rc != 0
+
+    - name: Check if Volume group exists
+      command: lvdisplay nfs
+      register: lv_exists
+
+    - name: Create a logical volume the size of all remaining space in the volume group
+      community.general.lvol:
+        vg: nfs
+        lv: nfs
+        size: 100%FREE
+      when: lv_exists.rc != 0
+
+    # - name: Check format of /dev/mapper/nfs-nfs
+    #   stat: path=/dev/mapper/nfs-nfs
+    #   register: nfs_nfs_stat
+
+    # - name: Print filesystem type
+    #   debug:
+    #     msg: "Filesystem type of /dev/mapper/nfs-nfs is {{ nfs_nfs_stat.stat }}"
+
+    # - name: Format logical volume nfs as XFS
+    #   command: mkfs.xfs /dev/mapper/nfs-nfs
+    #   when: format_set.rc != 0
+
+    - name: Create mount point for NFS storage
+      file:
+        path: '{{ vars.mount_point }}'
+        state: directory
+
+    - name: Create /etc/fstab if not exists
+      file:
+        path: /etc/fstab
+        state: present
+        mode: u+rw,g-wx,o-rwx
+        modification_time: preserve
+        access_time: preserve
+
+    - name: Add NFS storage to /etc/fstab
+      lineinfile:
+        dest: /etc/fstab
+        state: present
+        line: "/dev/mapper/nfs-nfs {{ vars.mount_point }} xfs defaults 0 0"
+
+    - name: Create mount point for NFS storage
+      command: mount -av

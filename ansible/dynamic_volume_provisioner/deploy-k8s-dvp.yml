@@ -17,30 +17,37 @@
         definition: "{{ lookup('template', 'templates/service-account.yml') | from_yaml }}"
         namespace: "{{ namespace }}"
 
+    - name: Deploy SCC
+      k8s:
+        name: scc
+        state: present
+        definition: "{{ lookup('template', 'templates/scc-nfs.yml') | from_yaml }}"
+        namespace: "{{ namespace }}"
+
     - name: Deploy Cluster Role
       k8s:
-        name: rbac
+        name: role
         state: present
         definition: "{{ lookup('template', 'templates/clusterrole.yml') | from_yaml }}"
         namespace: "{{ namespace }}"
 
     - name: Deploy Cluster Role Binding
       k8s:
-        name: rbac
+        name: role
         state: present
         definition: "{{ lookup('template', 'templates/clusterrole-binding.yml') | from_yaml }}"
         namespace: "{{ namespace }}"
 
     - name: Deploy Role
       k8s:
-        name: rbac
+        name: role
         state: present
         definition: "{{ lookup('template', 'templates/role.yml') | from_yaml }}"
         namespace: "{{ namespace }}"
 
     - name: Deploy Role Binding
       k8s:
-        name: rbac
+        name: role
         state: present
         definition: "{{ lookup('template', 'templates/rolebinding.yml') | from_yaml }}"
         namespace: "{{ namespace }}"

@@ -1,0 +1,30 @@
+suite: config template | database section (postgresql)
+release:
+  name: gitea-unittests
+  namespace: testing
+tests:
+  - it: "connects to postgresql service"
+    template: templates/gitea/config.yaml
+    set:
+      postgresql:
+        enabled: true
+      postgresql-ha:
+        enabled: false
+    asserts:
+      - documentIndex: 0
+        matchRegex:
+          path: stringData.database
+          pattern: HOST=gitea-unittests-postgresql.testing.svc.cluster.local:5432
+  - it: "renders the referenced service"
+    template: charts/postgresql/templates/primary/svc.yaml
+    set:
+      postgresql:
+        enabled: true
+      postgresql-ha:
+        enabled: false
+    asserts:
+      - containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: gitea-unittests-postgresql
+          namespace: testing

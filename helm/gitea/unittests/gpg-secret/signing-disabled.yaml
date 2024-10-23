@@ -1,0 +1,13 @@
+suite: GPG secret template (signing disabled)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/gpg-secret.yaml
+tests:
+  - it: renders nothing
+    set:
+      signing.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

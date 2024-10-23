@@ -1,0 +1,15 @@
+suite: Init template (basic)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/init.yaml
+tests:
+  - it: renders a secret
+    asserts:
+      - hasDocuments:
+          count: 1
+      - containsDocument:
+          kind: Secret
+          apiVersion: v1
+          name: gitea-unittests-init

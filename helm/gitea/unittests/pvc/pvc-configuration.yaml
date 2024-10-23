@@ -1,0 +1,19 @@
+suite: PVC template
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/pvc.yaml
+tests:
+  - it: Storage Class using TPL
+    set:
+      global.persistence.storageClass: "storage-class"
+      persistence.enabled: true
+      persistence.create: true
+      persistence.storageClass: "{{ .Values.global.persistence.storageClass }}"
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: spec.storageClassName
+          value: "storage-class"

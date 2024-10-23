@@ -1,0 +1,118 @@
+suite: ssh-svc / http-svc template (Services configuration)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/ssh-svc.yaml
+  - templates/gitea/http-svc.yaml
+tests:
+  - it: supports adding custom labels to ssh-svc
+    template: templates/gitea/ssh-svc.yaml
+    set:
+      service:
+        ssh:
+          labels:
+            gitea/testkey: testvalue
+    asserts:
+      - equal:
+          path: metadata.labels["gitea/testkey"]
+          value: "testvalue"
+
+  - it: keeps existing labels (ssh)
+    template: templates/gitea/ssh-svc.yaml
+    set:
+      service:
+        ssh:
+          labels: {}
+    asserts:
+      - exists:
+          path: metadata.labels["app"]
+
+  - it: supports adding custom labels to http-svc
+    template: templates/gitea/http-svc.yaml
+    set:
+      service:
+        http:
+          labels:
+            gitea/testkey: testvalue
+    asserts:
+      - equal:
+          path: metadata.labels["gitea/testkey"]
+          value: "testvalue"
+
+  - it: keeps existing labels (http)
+    template: templates/gitea/http-svc.yaml
+    set:
+      service:
+        http:
+          labels: {}
+    asserts:
+      - exists:
+          path: metadata.labels["app"]
+
+  - it: render service.ssh.loadBalancerClass if set and type is LoadBalancer
+    template: templates/gitea/ssh-svc.yaml
+    set:
+      service:
+        ssh:
+          loadBalancerClass: "example.com/class"
+          type: LoadBalancer
+          loadBalancerIP: "1.2.3.4"
+          loadBalancerSourceRanges:
+            - "1.2.3.4/32"
+            - "5.6.7.8/32"
+    asserts:
+      - equal:
+          path: spec.loadBalancerClass
+          value: "example.com/class"
+      - equal:
+          path: spec.loadBalancerIP
+          value: "1.2.3.4"
+      - equal:
+          path: spec.loadBalancerSourceRanges
+          value: ["1.2.3.4/32", "5.6.7.8/32"]
+
+  - it: does not render when loadbalancer properties are set but type is not loadBalancerClass
+    template: templates/gitea/http-svc.yaml
+    set:
+      service:
+        http:
+          type: ClusterIP
+          loadBalancerClass: "example.com/class"
+          loadBalancerIP: "1.2.3.4"
+          loadBalancerSourceRanges:
+            - "1.2.3.4/32"
+            - "5.6.7.8/32"
+    asserts:
+      - notExists:
+          path: spec.loadBalancerClass
+      - notExists:
+          path: spec.loadBalancerIP
+      - notExists:
+          path: spec.loadBalancerSourceRanges
+
+  - it: does not render loadBalancerClass by default even when type is LoadBalancer
+    template: templates/gitea/http-svc.yaml
+    set:
+      service:
+        http:
+          type: LoadBalancer
+          loadBalancerIP: "1.2.3.4"
+    asserts:
+      - notExists:
+          path: spec.loadBalancerClass
+      - equal:
+          path: spec.loadBalancerIP
+          value: "1.2.3.4"
+
+  - it: both ssh and http services exist
+    templates:
+      - templates/gitea/ssh-svc.yaml
+      - templates/gitea/http-svc.yaml
+    asserts:
+      - matchRegex:
+          path: metadata.name
+          pattern: "^gitea-unittests-(?:ssh|http)$"
+      - matchRegex:
+          path: spec.ports[0].name
+          pattern: "^(?:ssh|http)$"

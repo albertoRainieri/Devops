@@ -1,0 +1,89 @@
+suite: ServiceMonitor template (basic)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/servicemonitor.yaml
+tests:
+  - it: skips rendering by default
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders default ServiceMonitor object with gitea.metrics.enabled=true
+    set:
+      gitea.metrics.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders default ServiceMonitor object with gitea.metrics.serviceMonitor.enabled=true
+    set:
+      gitea.metrics.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders defaults
+    set:
+      gitea.metrics.enabled: true
+      gitea.metrics.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - containsDocument:
+          kind: ServiceMonitor
+          apiVersion: monitoring.coreos.com/v1
+          name: gitea-unittests
+      - notExists:
+          path: metadata.annotations
+      - notExists:
+          path: spec.endpoints[0].interval
+      - equal:
+          path: spec.endpoints[0].port
+          value: http
+      - notExists:
+          path: spec.endpoints[0].scheme
+      - notExists:
+          path: spec.endpoints[0].scrapeTimeout
+      - notExists:
+          path: spec.endpoints[0].tlsConfig
+  - it: renders custom scrape interval
+    set:
+      gitea.metrics.enabled: true
+      gitea.metrics.serviceMonitor.enabled: true
+      gitea.metrics.serviceMonitor.interval: 30s
+      gitea.metrics.serviceMonitor.scrapeTimeout: 5s
+    asserts:
+      - equal:
+          path: spec.endpoints[0].interval
+          value: 30s
+      - equal:
+          path: spec.endpoints[0].scrapeTimeout
+          value: 5s
+  - it: renders custom tls config
+    set:
+      gitea.metrics.enabled: true
+      gitea.metrics.serviceMonitor.enabled: true
+      gitea.metrics.serviceMonitor.scheme: https
+      gitea.metrics.serviceMonitor.tlsConfig.caFile: /etc/prometheus/tls/ca.crt
+      gitea.metrics.serviceMonitor.tlsConfig.certFile: /etc/prometheus/tls/tls.crt
+      gitea.metrics.serviceMonitor.tlsConfig.keyFile: /etc/prometheus/tls/tls.key
+      gitea.metrics.serviceMonitor.tlsConfig.insecureSkipVerify: false
+      gitea.metrics.serviceMonitor.tlsConfig.serverName: gitea-unittest
+    asserts:
+      - equal:
+          path: spec.endpoints[0].scheme
+          value: https
+      - equal:
+          path: spec.endpoints[0].tlsConfig.caFile
+          value: /etc/prometheus/tls/ca.crt
+      - equal:
+          path: spec.endpoints[0].tlsConfig.certFile
+          value: /etc/prometheus/tls/tls.crt
+      - equal:
+          path: spec.endpoints[0].tlsConfig.keyFile
+          value: /etc/prometheus/tls/tls.key
+      - equal:
+          path: spec.endpoints[0].tlsConfig.insecureSkipVerify
+          value: false
+      - equal:
+          path: spec.endpoints[0].tlsConfig.serverName
+          value: gitea-unittest

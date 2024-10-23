@@ -1,0 +1,40 @@
+suite: GPG secret template (signing enabled)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/gpg-secret.yaml
+tests:
+  - it: fails rendering when nothing is configured
+    set:
+      signing:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: Either specify `signing.privateKey` or `signing.existingSecret`
+  - it: skips rendering using external secret reference
+    set:
+      signing:
+        enabled: true
+        existingSecret: "external-secret-reference"
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders secret specification using inline gpg key
+    set:
+      signing:
+        enabled: true
+        privateKey: "gpg-key-placeholder"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - documentIndex: 0
+        containsDocument:
+          kind: Secret
+          apiVersion: v1
+          name: gitea-unittests-gpg-key
+      - isNotNullOrEmpty:
+          path: metadata.labels
+      - equal:
+          path: data.privateKey
+          value: "Z3BnLWtleS1wbGFjZWhvbGRlcg=="

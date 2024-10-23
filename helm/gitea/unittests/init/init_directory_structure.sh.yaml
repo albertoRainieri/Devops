@@ -1,0 +1,72 @@
+suite: Init template
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/init.yaml
+tests:
+  - it: runs gpg in batch mode
+    set:
+      image.rootless: false
+      signing.enabled: true
+      signing.privateKey: |-
+        -----BEGIN PGP PRIVATE KEY BLOCK-----
+        {placeholder}
+        -----END PGP PRIVATE KEY BLOCK-----
+    asserts:
+      - equal:
+          path: stringData["configure_gpg_environment.sh"]
+          value: |-
+            #!/usr/bin/env bash
+            set -eu
+
+            gpg --batch --import /raw/private.asc
+  - it: skips gpg script block for disabled signing
+    set:
+      image.rootless: false
+    asserts:
+      - equal:
+          path: stringData["init_directory_structure.sh"]
+          value: |-
+            #!/usr/bin/env bash
+
+            set -euo pipefail
+            chown -v 1000:1000 /data
+            mkdir -pv /data/git/.ssh
+            chmod -Rv 700 /data/git/.ssh
+            [ ! -d /data/gitea/conf ] && mkdir -pv /data/gitea/conf
+
+            # prepare temp directory structure
+            mkdir -pv "${GITEA_TEMP}"
+            chown -v 1000:1000 "${GITEA_TEMP}"
+            chmod -v ug+rwx "${GITEA_TEMP}"
+  - it: adds gpg script block for enabled signing
+    set:
+      image.rootless: false
+      signing.enabled: true
+      signing.privateKey: |-
+        -----BEGIN PGP PRIVATE KEY BLOCK-----
+        {placeholder}
+        -----END PGP PRIVATE KEY BLOCK-----
+    asserts:
+      - equal:
+          path: stringData["init_directory_structure.sh"]
+          value: |-
+            #!/usr/bin/env bash
+
+            set -euo pipefail
+            chown -v 1000:1000 /data
+            mkdir -pv /data/git/.ssh
+            chmod -Rv 700 /data/git/.ssh
+            [ ! -d /data/gitea/conf ] && mkdir -pv /data/gitea/conf
+
+            # prepare temp directory structure
+            mkdir -pv "${GITEA_TEMP}"
+            chown -v 1000:1000 "${GITEA_TEMP}"
+            chmod -v ug+rwx "${GITEA_TEMP}"
+
+            if [ ! -d "${GNUPGHOME}" ]; then
+              mkdir -pv "${GNUPGHOME}"
+              chmod -v 700 "${GNUPGHOME}"
+              chown -v 1000:1000 "${GNUPGHOME}"
+            fi

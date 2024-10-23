@@ -7,4 +7,4 @@
 # STEP 2: Deploy a Deployment for dynamic volume provisioning (deploy-k8s-dvp.yml)
 
 # EXECUTION
-ansible-playbook
+ansible-playbook dynamic_volume_provisioner/main.yml -i hosts

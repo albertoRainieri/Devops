@@ -1,0 +1,82 @@
+suite: ServiceAccount template (basic)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/serviceaccount.yaml
+tests:
+  - it: skips rendering by default
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders default ServiceAccount object with serviceAccount.create=true
+    set:
+      serviceAccount.create: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - containsDocument:
+          kind: ServiceAccount
+          apiVersion: v1
+          name: gitea-unittests
+      - equal:
+          path: automountServiceAccountToken
+          value: false
+      - notExists:
+          path: imagePullSecrets
+      - notExists:
+          path: metadata.annotations
+  - it: allows for adding custom labels
+    set:
+      serviceAccount:
+        create: true
+        labels:
+          custom: label
+    asserts:
+      - equal:
+          path: metadata.labels.custom
+          value: label
+  - it: allows for adding custom annotations
+    set:
+      serviceAccount:
+        create: true
+        annotations:
+          myCustom: annotation
+    asserts:
+      - equal:
+          path: metadata.annotations.myCustom
+          value: annotation
+  - it: allows to override the generated name
+    set:
+      serviceAccount:
+        create: true
+        name: provided-serviceaccount-name
+    asserts:
+      - equal:
+          path: metadata.name
+          value: provided-serviceaccount-name
+  - it: allows to mount the token
+    set:
+      serviceAccount:
+        create: true
+        automountServiceAccountToken: true
+    asserts:
+      - equal:
+          path: automountServiceAccountToken
+          value: true
+  - it: allows to reference image pull secrets
+    set:
+      serviceAccount:
+        create: true
+        imagePullSecrets:
+          - name: testing-image-pull-secret
+          - name: another-pull-secret
+    asserts:
+      - contains:
+          path: imagePullSecrets
+          content:
+            name: testing-image-pull-secret
+      - contains:
+          path: imagePullSecrets
+          content:
+            name: another-pull-secret

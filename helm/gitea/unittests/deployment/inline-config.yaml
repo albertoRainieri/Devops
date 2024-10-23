@@ -1,0 +1,33 @@
+suite: config template
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/config.yaml
+tests:
+  - it: inline config stringData.server using TPL
+    set:
+      global.giteaHostName: "gitea.example.com"
+      ingress.enabled: true
+      ingress.hosts[0].host: "{{ .Values.global.giteaHostName }}"
+      ingress.tls:
+        - secretName: gitea-tls
+          hosts:
+            - "{{ .Values.global.giteaHostName }}"
+    asserts:
+      - documentIndex: 0
+        matchRegex:
+          path: metadata.name
+          pattern: .*-inline-config$
+      - documentIndex: 0
+        matchRegex:
+          path: stringData.server
+          pattern: DOMAIN=gitea\.example\.com
+      - documentIndex: 0
+        matchRegex:
+          path: stringData.server
+          pattern: ROOT_URL=https://gitea\.example\.com
+      - documentIndex: 0
+        matchRegex:
+          path: stringData.server
+          pattern: SSH_DOMAIN=gitea\.example\.com

@@ -1,0 +1,30 @@
+suite: config template | database section (postgresql-ha)
+release:
+  name: gitea-unittests
+  namespace: testing
+tests:
+  - it: connects to pgpool service
+    template: templates/gitea/config.yaml
+    set:
+      postgresql:
+        enabled: false
+      postgresql-ha:
+        enabled: true
+    asserts:
+      - documentIndex: 0
+        matchRegex:
+          path: stringData.database
+          pattern: HOST=gitea-unittests-postgresql-ha-pgpool.testing.svc.cluster.local:5432
+  - it: renders the referenced service
+    template: charts/postgresql-ha/templates/pgpool/service.yaml
+    set:
+      postgresql:
+        enabled: false
+      postgresql-ha:
+        enabled: true
+    asserts:
+      - containsDocument:
+          kind: Service
+          apiVersion: v1
+          name: gitea-unittests-postgresql-ha-pgpool
+          namespace: testing

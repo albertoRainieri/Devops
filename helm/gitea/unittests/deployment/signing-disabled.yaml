@@ -1,0 +1,40 @@
+suite: deployment template (signing disabled)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/deployment.yaml
+  - templates/gitea/config.yaml
+tests:
+  - it: skips gpg init container
+    template: templates/gitea/deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.initContainers
+          any: true
+          content:
+            name: configure-gpg
+  - it: skips gpg env in `init-directories` init container
+    template: templates/gitea/deployment.yaml
+    set:
+      signing.enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: GNUPGHOME
+            value: /data/git/.gnupg
+  - it: skips gpg env in runtime container
+    template: templates/gitea/deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GNUPGHOME
+  - it: skips gpg volume spec
+    template: templates/gitea/deployment.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.volumes
+          content:
+            name: gpg-private-key

@@ -1,0 +1,110 @@
+suite: deployment template (image configuration)
+release:
+  name: gitea-unittests
+  namespace: testing
+chart:
+  # Override appVersion to be consistent with used digest :)
+  appVersion: 1.19.3
+templates:
+  - templates/gitea/deployment.yaml
+  - templates/gitea/config.yaml
+tests:
+  - it: default values
+    template: templates/gitea/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "gitea/gitea:1.19.3-rootless"
+  - it: tag override
+    template: templates/gitea/deployment.yaml
+    set:
+      image.tag: "1.19.4"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "gitea/gitea:1.19.4-rootless"
+  - it: root-based image
+    template: templates/gitea/deployment.yaml
+    set:
+      image.rootless: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "gitea/gitea:1.19.3"
+  - it: scoped registry
+    template: templates/gitea/deployment.yaml
+    set:
+      image.registry: "example.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "example.com/gitea/gitea:1.19.3-rootless"
+  - it: global registry
+    template: templates/gitea/deployment.yaml
+    set:
+      global.imageRegistry: "global.example.com"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "global.example.com/gitea/gitea:1.19.3-rootless"
+  - it: digest for rootless image
+    template: templates/gitea/deployment.yaml
+    set:
+      image:
+        rootless: true
+        digest: sha256:b28e8f3089b52ebe6693295df142f8c12eff354e9a4a5bfbb5c10f296c3a537a
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "gitea/gitea:1.19.3-rootless@sha256:b28e8f3089b52ebe6693295df142f8c12eff354e9a4a5bfbb5c10f296c3a537a"
+  - it: image fullOverride (does not append rootless)
+    template: templates/gitea/deployment.yaml
+    set:
+      image:
+        fullOverride: gitea/gitea:1.19.3
+        # setting rootless, registry, repository, tag, and digest to prove that override works
+        rootless: true
+        registry: example.com
+        repository: example/image
+        tag: "1.0.0"
+        digest: sha256:b28e8f3089b52ebe6693295df142f8c12eff354e9a4a5bfbb5c10f296c3a537a
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "gitea/gitea:1.19.3"
+  - it: digest for root-based image
+    template: templates/gitea/deployment.yaml
+    set:
+      image:
+        rootless: false
+        digest: sha256:b28e8f3089b52ebe6693295df142f8c12eff354e9a4a5bfbb5c10f296c3a537a
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "gitea/gitea:1.19.3@sha256:b28e8f3089b52ebe6693295df142f8c12eff354e9a4a5bfbb5c10f296c3a537a"
+  - it: digest and global registry
+    template: templates/gitea/deployment.yaml
+    set:
+      global.imageRegistry: "global.example.com"
+      image.digest: "sha256:b28e8f3089b52ebe6693295df142f8c12eff354e9a4a5bfbb5c10f296c3a537a"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "global.example.com/gitea/gitea:1.19.3-rootless@sha256:b28e8f3089b52ebe6693295df142f8c12eff354e9a4a5bfbb5c10f296c3a537a"
+  - it: correctly renders floating tag references
+    template: templates/gitea/deployment.yaml
+    set:
+      image.tag: 1.21 # use non-quoted value on purpose. See: https://gitea.com/gitea/helm-chart/issues/631
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: "gitea/gitea:1.21-rootless"
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: "gitea/gitea:1.21-rootless"
+      - equal:
+          path: spec.template.spec.initContainers[2].image
+          value: "gitea/gitea:1.21-rootless"
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "gitea/gitea:1.21-rootless"

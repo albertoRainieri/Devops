@@ -41,7 +41,7 @@ metadata:
   name: leader-locking-nfs-client-provisioner
 rules:
   - apiGroups: [""]
-    resources: ["endpoints"]
+    resources: ["endpoints", "deployments"]
     verbs: ["get", "list", "watch", "create", "update", "patch"]
 ---
 kind: RoleBinding

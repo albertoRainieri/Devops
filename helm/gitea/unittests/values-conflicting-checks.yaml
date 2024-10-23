@@ -1,0 +1,14 @@
+suite: Values conflicting checks
+release:
+  name: gitea-unittests
+  namespace: testing
+tests:
+  - it: fails when trying to configure redis and redis-cluster the same time
+    set:
+      redis-cluster:
+        enabled: true
+      redis:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: redis and redis-cluster cannot be enabled at the same time. Please only choose one.

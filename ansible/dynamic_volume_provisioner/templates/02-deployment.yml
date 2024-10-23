@@ -15,9 +15,20 @@ spec:
         app: nfs-client-provisioner
     spec:
       serviceAccountName: nfs-client-provisioner
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - ocp-w-1.lab.devops.lab
+                - ocp-w-2.lab.devops.lab
       containers:
         - name: nfs-client-provisioner
-          image: quay.io/external_storage/nfs-client-provisioner:latest
+          #image: quay.io/external_storage/nfs-client-provisioner:v3.1.0-k8s1.11 # KUBERNETETS
+          image: k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
           resources:
             requests:
               memory: "64Mi"

@@ -1,0 +1,32 @@
+suite: ServiceAccount template (reference)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/serviceaccount.yaml
+  - templates/gitea/deployment.yaml
+  - templates/gitea/config.yaml
+tests:
+  - it: does not modify the deployment by default
+    template: templates/gitea/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.serviceAccountName
+  - it: adds the reference to the deployment with serviceAccount.create=true
+    template: templates/gitea/deployment.yaml
+    set:
+      serviceAccount.create: true
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: gitea-unittests
+  - it: allows referencing an externally created ServiceAccount to the deployment
+    template: templates/gitea/deployment.yaml
+    set:
+      serviceAccount:
+        create: false # explicitly set to define rendering behavior
+        name: "externally-existing-serviceaccount"
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: externally-existing-serviceaccount

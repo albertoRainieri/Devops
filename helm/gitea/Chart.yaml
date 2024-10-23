@@ -1,0 +1,55 @@
+apiVersion: v2
+name: gitea
+description: Gitea Helm chart for Kubernetes
+type: application
+version: 0.0.0
+# renovate datasource=github-releases depName=go-gitea/gitea extractVersion=^v(?<version>.*)$
+appVersion: 1.22.2
+icon: https://gitea.com/assets/img/logo.svg
+
+keywords:
+  - git
+  - issue tracker
+  - code review
+  - wiki
+  - gitea
+  - gogs
+sources:
+  - https://gitea.com/gitea/helm-chart
+  - https://github.com/go-gitea/gitea
+  - https://hub.docker.com/r/gitea/gitea/
+maintainers:
+  - name: Charlie Drage
+    email: charlie@charliedrage.com
+  - name: Gitea Authors
+    email: maintainers@gitea.io
+  - name: Konrad Lother
+    email: konrad.lother@novum-rgi.de
+  - name: Lucas Hahn
+    email: lucas.hahn@novum-rgi.de
+  - name: Steven Kriegler
+    email: sk.bunsenbrenner@gmail.com
+  - name: Patrick Schratz
+    email: patrick.schratz@gmail.com
+
+dependencies:
+  # https://github.com/bitnami/charts/blob/main/bitnami/postgresql
+  - name: postgresql
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 15.5.20
+    condition: postgresql.enabled
+  # https://github.com/bitnami/charts/blob/main/bitnami/postgresql-ha/Chart.yaml
+  - name: postgresql-ha
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 14.2.16
+    condition: postgresql-ha.enabled
+  # https://github.com/bitnami/charts/blob/main/bitnami/redis-cluster/Chart.yaml
+  - name: redis-cluster
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 10.3.0
+    condition: redis-cluster.enabled
+  # https://github.com/bitnami/charts/blob/main/bitnami/redis/Chart.yaml
+  - name: redis
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: 19.6.4
+    condition: redis.enabled

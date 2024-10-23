@@ -1,0 +1,64 @@
+suite: deployment template (SSH configuration)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/deployment.yaml
+  - templates/gitea/config.yaml
+tests:
+  - it: supports defining SSH log level for root based image
+    template: templates/gitea/deployment.yaml
+    set:
+      image.rootless: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SSH_LOG_LEVEL
+            value: "INFO"
+  - it: supports overriding SSH log level
+    template: templates/gitea/deployment.yaml
+    set:
+      image.rootless: false
+      gitea.ssh.logLevel: "DEBUG"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SSH_LOG_LEVEL
+            value: "DEBUG"
+  - it: supports overriding SSH log level (even when image.fullOverride set)
+    template: templates/gitea/deployment.yaml
+    set:
+      image.fullOverride: gitea/gitea:1.19.3
+      image.rootless: false
+      gitea.ssh.logLevel: "DEBUG"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: SSH_LOG_LEVEL
+            value: "DEBUG"
+  - it: skips SSH_LOG_LEVEL for rootless image
+    template: templates/gitea/deployment.yaml
+    set:
+      image.rootless: true
+      gitea.ssh.logLevel: "DEBUG" # explicitly defining a non-standard level here
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          any: true
+          content:
+            name: SSH_LOG_LEVEL
+  - it: skips SSH_LOG_LEVEL for rootless image (even when image.fullOverride set)
+    template: templates/gitea/deployment.yaml
+    set:
+      image.fullOverride: gitea/gitea:1.19.3
+      image.rootless: true
+      gitea.ssh.logLevel: "DEBUG" # explicitly defining a non-standard level here
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          any: true
+          content:
+            name: SSH_LOG_LEVEL

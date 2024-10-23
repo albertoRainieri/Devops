@@ -1,0 +1,57 @@
+suite: Dependency update consistency
+release:
+  name: gitea-unittests
+  namespace: testing
+tests:
+  - it: "[postgresql-ha] ensures we detect major image version upgrades"
+    template: charts/postgresql-ha/templates/postgresql/statefulset.yaml
+    set:
+      postgresql:
+        enabled: false
+      postgresql-ha:
+        enabled: true
+    asserts:
+      - documentIndex: 0
+        matchRegex:
+          path: spec.template.spec.containers[0].image
+          # IN CASE OF AN INTENTIONAL MAJOR BUMP, ADJUST THIS TEST
+          pattern: bitnami/postgresql-repmgr:16.+$
+  - it: "[postgresql] ensures we detect major image version upgrades"
+    template: charts/postgresql/templates/primary/statefulset.yaml
+    set:
+      postgresql:
+        enabled: true
+      postgresql-ha:
+        enabled: false
+    asserts:
+      - documentIndex: 0
+        matchRegex:
+          path: spec.template.spec.containers[0].image
+          # IN CASE OF AN INTENTIONAL MAJOR BUMP, ADJUST THIS TEST
+          pattern: bitnami/postgresql:16.+$
+  - it: "[redis-cluster] ensures we detect major image version upgrades"
+    template: charts/redis-cluster/templates/redis-statefulset.yaml
+    set:
+      redis-cluster:
+        enabled: true
+      redis:
+        enabled: false
+    asserts:
+      - documentIndex: 0
+        matchRegex:
+          path: spec.template.spec.containers[0].image
+          # IN CASE OF AN INTENTIONAL MAJOR BUMP, ADJUST THIS TEST
+          pattern: bitnami/redis-cluster:7.+$
+  - it: "[redis] ensures we detect major image version upgrades"
+    template: charts/redis/templates/master/application.yaml
+    set:
+      redis-cluster:
+        enabled: false
+      redis:
+        enabled: true
+    asserts:
+      - documentIndex: 0
+        matchRegex:
+          path: spec.template.spec.containers[0].image
+          # IN CASE OF AN INTENTIONAL MAJOR BUMP, ADJUST THIS TEST
+          pattern: bitnami/redis:7.+$

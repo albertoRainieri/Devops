@@ -1,0 +1,59 @@
+suite: deployment template (HA)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/deployment.yaml
+  - templates/gitea/config.yaml
+tests:
+  - it: fails with multiple replicas and "GIT_GC_REPOS" enabled
+    template: templates/gitea/deployment.yaml
+    set:
+      replicaCount: 2
+      persistence:
+        accessModes:
+          - ReadWriteMany
+      gitea:
+        config:
+          cron:
+            GIT_GC_REPOS:
+              ENABLED: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "Invoking the garbage collector via CRON is not yet supported when running with multiple replicas. Please set 'cron.GIT_GC_REPOS.enabled = false'."
+  - it: fails with multiple replicas and RWX file system not set
+    template: templates/gitea/deployment.yaml
+    set:
+      replicaCount: 2
+    asserts:
+      - failedTemplate:
+          errorMessage: "When using multiple replicas, a RWX file system is required and gitea.persistence.accessModes[0] must be set to ReadWriteMany."
+  - it: fails with multiple replicas and bleve issue indexer
+    template: templates/gitea/deployment.yaml
+    set:
+      replicaCount: 2
+      persistence:
+        accessModes:
+          - ReadWriteMany
+      gitea:
+        config:
+          indexer:
+            ISSUE_INDEXER_TYPE: bleve
+    asserts:
+      - failedTemplate:
+          errorMessage: "When using multiple replicas, the issue indexer (gitea.config.indexer.ISSUE_INDEXER_TYPE) must be set to a HA-ready provider such as 'meilisearch', 'elasticsearch' or 'db' (if the DB is HA-ready)."
+  - it: fails with multiple replicas and bleve repo indexer
+    template: templates/gitea/deployment.yaml
+    set:
+      replicaCount: 2
+      persistence:
+        accessModes:
+          - ReadWriteMany
+      gitea:
+        config:
+          indexer:
+            REPO_INDEXER_TYPE: bleve
+            REPO_INDEXER_ENABLED: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "When using multiple replicas, the repo indexer (gitea.config.indexer.REPO_INDEXER_TYPE) must be set to 'meilisearch' or 'elasticsearch' or disabled."

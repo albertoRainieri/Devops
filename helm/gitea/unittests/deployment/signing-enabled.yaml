@@ -1,0 +1,96 @@
+suite: deployment template (signing enabled)
+release:
+  name: gitea-unittests
+  namespace: testing
+templates:
+  - templates/gitea/deployment.yaml
+  - templates/gitea/config.yaml
+tests:
+  - it: adds gpg init container
+    template: templates/gitea/deployment.yaml
+    set:
+      signing:
+        enabled: true
+        existingSecret: "custom-gpg-secret"
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[2].name
+          value: configure-gpg
+      - equal:
+          path: spec.template.spec.initContainers[2].command
+          value: ["/usr/sbin/configure_gpg_environment.sh"]
+      - equal:
+          path: spec.template.spec.initContainers[2].securityContext
+          value:
+            runAsUser: 1000
+      - equal:
+          path: spec.template.spec.initContainers[2].env
+          value:
+            - name: GNUPGHOME
+              value: /data/git/.gnupg
+      - equal:
+          path: spec.template.spec.initContainers[2].volumeMounts
+          value:
+            - name: init
+              mountPath: /usr/sbin
+            - name: data
+              mountPath: /data
+            - name: gpg-private-key
+              mountPath: /raw
+              readOnly: true
+  - it: adds gpg env in `init-directories` init container
+    template: templates/gitea/deployment.yaml
+    set:
+      signing.enabled: true
+      signing.existingSecret: "custom-gpg-secret"
+    asserts:
+      - contains:
+          path: spec.template.spec.initContainers[0].env
+          content:
+            name: GNUPGHOME
+            value: /data/git/.gnupg
+  - it: adds gpg env in runtime container
+    template: templates/gitea/deployment.yaml
+    set:
+      signing.enabled: true
+      signing.existingSecret: "custom-gpg-secret"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: GNUPGHOME
+            value: /data/git/.gnupg
+  - it: adds gpg volume spec
+    template: templates/gitea/deployment.yaml
+    set:
+      signing:
+        enabled: true
+        existingSecret: "gitea-unittests-gpg-key"
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: gpg-private-key
+            secret:
+              secretName: gitea-unittests-gpg-key
+              items:
+                - key: privateKey
+                  path: private.asc
+              defaultMode: 0100
+  - it: supports gpg volume spec with external reference
+    template: templates/gitea/deployment.yaml
+    set:
+      signing:
+        enabled: true
+        existingSecret: custom-gpg-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: gpg-private-key
+            secret:
+              secretName: custom-gpg-secret
+              items:
+                - key: privateKey
+                  path: private.asc
+              defaultMode: 0100

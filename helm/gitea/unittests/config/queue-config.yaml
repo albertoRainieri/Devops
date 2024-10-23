@@ -1,0 +1,66 @@
+suite: config template | queue config
+release:
+  name: gitea-unittests
+  namespace: testing
+tests:
+  - it: "queue is configured correctly for redis-cluster"
+    template: templates/gitea/config.yaml
+    set:
+      redis-cluster:
+        enabled: true
+      redis:
+        enabled: false
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: stringData.queue
+          value: |-
+            CONN_STR=redis+cluster://:@gitea-unittests-redis-cluster-headless.testing.svc.cluster.local:6379/0?pool_size=100&idle_timeout=180s&
+            TYPE=redis
+
+  - it: "queue is configured correctly for redis"
+    template: templates/gitea/config.yaml
+    set:
+      redis-cluster:
+        enabled: false
+      redis:
+        enabled: true
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: stringData.queue
+          value: |-
+            CONN_STR=redis://:changeme@gitea-unittests-redis-headless.testing.svc.cluster.local:6379/0?pool_size=100&idle_timeout=180s&
+            TYPE=redis
+
+  - it: "queue is configured correctly for 'levelDB' when redis (and redis-cluster) is disabled"
+    template: templates/gitea/config.yaml
+    set:
+      redis-cluster:
+        enabled: false
+      redis:
+        enabled: false
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: stringData.queue
+          value: |-
+            CONN_STR=
+            TYPE=level
+
+  - it: "queue can be customized when redis (and redis-cluster) are disabled"
+    template: templates/gitea/config.yaml
+    set:
+      redis-cluster:
+        enabled: false
+      redis:
+        enabled: false
+      gitea.config.queue.TYPE: custom-type
+      gitea.config.queue.CONN_STR: custom-connection-string
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: stringData.queue
+          value: |-
+            CONN_STR=custom-connection-string
+            TYPE=custom-type

@@ -1,0 +1,66 @@
+suite: config template | session config
+release:
+  name: gitea-unittests
+  namespace: testing
+tests:
+  - it: "session is configured correctly for redis-cluster"
+    template: templates/gitea/config.yaml
+    set:
+      redis-cluster:
+        enabled: true
+      redis:
+        enabled: false
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: stringData.session
+          value: |-
+            PROVIDER=redis
+            PROVIDER_CONFIG=redis+cluster://:@gitea-unittests-redis-cluster-headless.testing.svc.cluster.local:6379/0?pool_size=100&idle_timeout=180s&
+
+  - it: "session is configured correctly for redis"
+    template: templates/gitea/config.yaml
+    set:
+      redis-cluster:
+        enabled: false
+      redis:
+        enabled: true
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: stringData.session
+          value: |-
+            PROVIDER=redis
+            PROVIDER_CONFIG=redis://:changeme@gitea-unittests-redis-headless.testing.svc.cluster.local:6379/0?pool_size=100&idle_timeout=180s&
+
+  - it: "session is configured correctly for 'memory' when redis (and redis-cluster) is disabled"
+    template: templates/gitea/config.yaml
+    set:
+      redis-cluster:
+        enabled: false
+      redis:
+        enabled: false
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: stringData.session
+          value: |-
+            PROVIDER=memory
+            PROVIDER_CONFIG=
+
+  - it: "session can be customized when redis (and redis-cluster) is disabled"
+    template: templates/gitea/config.yaml
+    set:
+      redis-cluster:
+        enabled: false
+      redis:
+        enabled: false
+      gitea.config.session.PROVIDER: custom-provider
+      gitea.config.session.PROVIDER_CONFIG: custom-provider-config
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: stringData.session
+          value: |-
+            PROVIDER=custom-provider
+            PROVIDER_CONFIG=custom-provider-config
