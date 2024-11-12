@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitea-app-ini-plaintext
+data:
+  webhook: |
+    ALLOWED_HOST_List=*

@@ -1,0 +1,189 @@
+credentials:
+  system:
+    domainCredentials:
+    - credentials:
+      - giteaAccessToken:
+          id: "gitea_admin"
+          scope: SYSTEM
+          token: "{AQAAABAAAAAwAMs/oQtM1fjZClt00VvaSz41Lk4aWpIGTTJo/SCPS0XHS38xivrIHIZnIqTPJEfZs7+OhqP9dasJ8eGsPtwB2Q==}"
+jenkins:
+  agentProtocols:
+  - "JNLP4-connect"
+  - "Ping"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  clouds:
+  - kubernetes:
+      containerCap: 10
+      containerCapStr: "10"
+      jenkinsTunnel: "jenkins-0.jenkins.devops-test.svc.cluster.local:50000"
+      jenkinsUrl: "http://jenkins.devops-test.svc.cluster.local:8080"
+      name: "kubernetes"
+      namespace: "devops-test"
+      podLabels:
+      - key: "jenkins/jenkins-jenkins-agent"
+        value: "true"
+      serverUrl: "https://kubernetes.default"
+      skipTlsVerify: true
+      templates:
+      - containers:
+        - args: "^${computer.jnlpmac} ^${computer.name}"
+          envVars:
+          - envVar:
+              key: "JENKINS_URL"
+              value: "http://jenkins.devops-test.svc.cluster.local:8080/"
+          image: "jenkins/inbound-agent:3273.v4cfe589b_fd83-1"
+          name: "jnlp"
+          resourceLimitCpu: "512m"
+          resourceLimitMemory: "512Mi"
+          resourceRequestCpu: "512m"
+          resourceRequestMemory: "512Mi"
+          workingDir: "/home/jenkins/agent"
+        id: "ee897950d84b7df4902d223b7ab5cadc152151d1624be85a4ea375ea2a8b1138"
+        label: "jenkins-jenkins-agent"
+        name: "default"
+        namespace: "devops-test"
+        nodeUsageMode: "NORMAL"
+        podRetention: "never"
+        serviceAccount: "jenkins-sa"
+        slaveConnectTimeout: 100
+        slaveConnectTimeoutStr: "100"
+        yamlMergeStrategy: "override"
+  crumbIssuer:
+    strict:
+      checkSessionMatch: false
+      hoursValid: 24
+      xorMasking: false
+  disableRememberMe: false
+  disabledAdministrativeMonitors:
+  - "hudson.util.DoubleLaunchChecker"
+  labelAtoms:
+  - name: "built-in"
+  - name: "jenkins-jenkins-agent"
+  markupFormatter: "plainText"
+  mode: NORMAL
+  myViewsTabBar: "standard"
+  nodeMonitors:
+  - "architecture"
+  - "clock"
+  - diskSpace:
+      freeSpaceThreshold: "1GiB"
+      freeSpaceWarningThreshold: "2GiB"
+  - "swapSpace"
+  - tmpSpace:
+      freeSpaceThreshold: "1GiB"
+      freeSpaceWarningThreshold: "2GiB"
+  - "responseTime"
+  numExecutors: 0
+  primaryView:
+    all:
+      name: "all"
+  projectNamingStrategy: "standard"
+  quietPeriod: 5
+  remotingSecurity:
+    enabled: true
+  scmCheckoutRetryCount: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      enableCaptcha: false
+      users:
+      - id: "admin"
+        name: "Jenkins Admin"
+        properties:
+        - "apiToken"
+        - "consoleUrlProvider"
+        - "mailer"
+        - "myView"
+        - preferredProvider:
+            providerId: "default"
+        - "timezone"
+        - "experimentalFlags"
+        - "favorite"
+  slaveAgentPort: 50000
+  updateCenter:
+    sites:
+    - id: "default"
+      url: "https://updates.jenkins.io/update-center.json"
+  views:
+  - all:
+      name: "all"
+  viewsTabBar: "standard"
+globalCredentialsConfiguration:
+  configuration:
+    providerFilter: "none"
+    typeFilter: "none"
+appearance:
+  pipelineGraphView:
+    showGraphOnBuildPage: false
+    showGraphOnJobPage: false
+  prism:
+    theme: PRISM
+security:
+  apiToken:
+    creationOfLegacyTokenEnabled: false
+    tokenGenerationOnCreationEnabled: false
+    usageStatisticsEnabled: true
+  cps:
+    hideSandbox: false
+  gitHooks:
+    allowedOnAgents: true
+    allowedOnController: false
+  gitHostKeyVerificationConfiguration:
+    sshHostKeyVerificationStrategy: "knownHostsFileVerificationStrategy"
+  scriptApproval:
+    forceSandbox: false
+unclassified:
+  bitbucketEndpointConfiguration:
+    endpoints:
+    - bitbucketCloudEndpoint:
+        enableCache: false
+        manageHooks: false
+        repositoriesCacheDuration: 0
+        teamCacheDuration: 0
+  buildDiscarders:
+    configuredBuildDiscarders:
+    - "jobBuildDiscarder"
+  fingerprints:
+    fingerprintCleanupDisabled: false
+    storage: "file"
+  gitHubConfiguration:
+    apiRateLimitChecker: ThrottleForNormalize
+  gitHubPluginConfig:
+    configs:
+    - manageHooks: false
+    - manageHooks: false
+    hookUrl: "http://jenkins-devops-test.apps.okd.devops.lab:8081/github-webhook/"
+  giteaServers:
+    servers:
+    - displayName: "Gitea"
+      manageHooks: false
+      serverUrl: "http://gitea-http:8081"
+  junitTestResultStorage:
+    storage: "file"
+  location:
+    adminAddress: "address not configured yet <nobody@nowhere>"
+    url: "http://jenkins-devops-test.apps.okd.devops.lab:8081/"
+  mailer:
+    charset: "UTF-8"
+    useSsl: false
+    useTls: false
+  pollSCM:
+    pollingThreadCount: 10
+  scmGit:
+    addGitTagAction: false
+    allowSecondFetch: false
+    createAccountBasedOnEmail: false
+    disableGitToolChooser: false
+    hideCredentials: false
+    showEntireCommitSummaryInChanges: false
+    useExistingAccountWithSameEmail: false
+tool:
+  git:
+    installations:
+    - home: "git"
+      name: "Default"
+  mavenGlobalConfig:
+    globalSettingsProvider: "standard"
+    settingsProvider: "standard"

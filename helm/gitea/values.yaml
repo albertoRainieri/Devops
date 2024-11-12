@@ -15,10 +15,13 @@ global:
   ##
   imagePullSecrets: []
   storageClass: "devops-test-sc"
-  hostAliases: []
+  hostAliases:
   # - ip: 192.168.137.2
   #   hostnames:
   #   - example.com
+  - ip: 51.178.68.233
+    hostnames:
+      - jenkins-devops-test.apps.okd.devops.lab
 
 ## @param replicaCount number of replicas for the deployment
 replicaCount: 1
@@ -428,11 +431,11 @@ gitea:
   #    PASSWORD_COMPLEXITY: spec
 
   ## @param gitea.additionalConfigSources Additional configuration from secret or configmap
-  additionalConfigSources: []
+  additionalConfigSources:
+    - configMap:
+        name: gitea-app-ini-plaintext
   #   - secret:
   #       secretName: gitea-app-ini-oauth
-  #   - configMap:
-  #       name: gitea-app-ini-plaintext
 
   ## @param gitea.additionalConfigFromEnvs Additional configuration sources from environment variables
   additionalConfigFromEnvs: []
