@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |-
+    events {}
+    http {
+      # ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+      # ssl_certificate      /etc/nginx/ssl/yourdomain.com.crt;
+      # ssl_certificate_key  /etc/nginx/ssl/yourdomain.com.key;
+      # ssl_session_cache shared:SSL:1m;
+      # ssl_prefer_server_ciphers   on;
+      ## server configuration
+      server {
+          # listen 443 ssl;
+          listen 80 ;
+          
+          # server_name artifactory-devops-test.apps.okd.devops.lab;
+
+          # if ($http_x_forwarded_proto = '') {
+          #   set $http_x_forwarded_proto  $scheme;
+          # }
+          ## Application specific logs
+          ## access_log /var/log/nginx/yourdomain.com-access.log timing;
+          ## error_log /var/log/nginx/yourdomain.com-error.log;
+          # rewrite ^/$ /ui/ redirect;
+          # rewrite ^/ui(/.*)$ http://artifactory-devops-test.apps.okd.devops.lab:8083$1 redirect;
+          chunked_transfer_encoding on;
+          client_max_body_size 0;
+          location / {
+              proxy_read_timeout  2400s;
+              proxy_pass_header   Server;
+              proxy_cookie_path   ~*^/.* /;
+              proxy_pass          http://artifactory-svc:8082;
+              proxy_set_header    X-JFrog-Override-Base-Url http://51.178.68.233;
+
+              location ~ ^/artifactory/ {
+                proxy_pass    http://artifactory-svc:8081;
+                proxy_set_header    X-JFrog-Override-Base-Url http://51.178.68.233;
+              }
+        }
+      }
+    }

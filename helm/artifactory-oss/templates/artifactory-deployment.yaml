@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "artifactory-oss.fullname" . }}
+  labels:
+    {{- include "artifactory-oss.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "artifactory-oss.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "artifactory-oss.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "artifactory-oss.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-config
+          image: busybox:1.28
+          command: ['sh', '-c',
+           'cp /tmp/system.yaml /var/opt/jfrog/artifactory/etc/',
+           'chown 1000720000:1000720000 /var/opt/jfrog/artifactory/etc/system.yaml']
+          volumeMounts:
+          - mountPath: "/var/opt/jfrog/artifactory/etc/"
+            defaultMode: 0777
+            readOnly: false
+            name: config-rw
+          - mountPath: "tmp"
+            defaultMode: 0777
+            readOnly: false
+            name: system-db
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+          ports:
+            - name: http-ui
+              containerPort: 8082
+              protocol: TCP
+          {{ with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{ with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: "/var/opt/jfrog/artifactory"
+              name: artifactory-data
+              readOnly: false
+            - mountPath: "/var/opt/jfrog/artifactory/etc/"
+              defaultMode: 0777
+              readOnly: false
+              name: config-rw
+      volumes:
+        - name: artifactory-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.pvc_name }}
+        - name: system-db
+          configMap:
+            name: system-db
+        - name: config-rw
+          emptyDir: {}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

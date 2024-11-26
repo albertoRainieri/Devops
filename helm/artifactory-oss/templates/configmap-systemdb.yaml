@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: system-db
+data:
+  system.yaml: |-
+    shared:
+      database:
+        driver: org.postgresql.Driver
+        type: postgresql
+        url: "jdbc:postgresql://{{ .Values.database.postgres_k8_service }}:{{ .Values.database.db_port }}/{{ .Values.database.db_name }}"
+        username: {{ .Values.database.username }}
+        password: {{ .Values.database.password }}
+      extraJavaOpts: "-Djava.net.preferIPv4Stack=true"
+      # node:
+      #   ip: 127.0.0.1:8082
+            # If forwardedForLogging is enabled, then the value of the Forwarded-For header will be logged. The default
+      # header is X-Forwarded-For
+      #forwardedForLogging:
+      #  enabled: false
+      #  header: X-Forwarded-For
