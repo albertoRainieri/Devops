@@ -1,0 +1,8 @@
+# reference: https://www.sohamkamani.com/java/cli-app-with-maven/
+
+# Initialize Project
+mvn -B archetype:generate -DgroupId=com.sohamkamani -DartifactId=mvn-example -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.4
+
+
+# Compile Project
+mvn clean package
